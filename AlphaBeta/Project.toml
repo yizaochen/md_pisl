@@ -1,0 +1,4 @@
+name = "AlphaBeta"
+uuid = "d77d55e1-23be-40c5-8652-b23c35d89ba5"
+authors = ["yizaochen <yizaochen@gmail.com>"]
+version = "0.1.0"
