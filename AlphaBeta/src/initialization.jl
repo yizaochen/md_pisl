@@ -1,4 +1,4 @@
-using LinearAlgebra
+using LinearAlgebra, Potential
 
 function get_alpha_t0(weight_Qx::Array{Float64,2}, rho_eq::Array{Float64,2})
     return transpose(weight_Qx) * rho_eq

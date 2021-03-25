@@ -1,11 +1,5 @@
 # This file is machine-generated - editing it directly is not advised
 
-[[AlphaBeta]]
-deps = ["Dierckx", "FEM", "JLD", "LineSearches", "LinearAlgebra", "Optim", "PhotonOperator", "Potential", "Printf", "PyCall", "PyPlot", "SparseArrays"]
-path = "AlphaBeta"
-uuid = "d77d55e1-23be-40c5-8652-b23c35d89ba5"
-version = "0.1.0"
-
 [[ArrayInterface]]
 deps = ["IfElse", "LinearAlgebra", "Requires", "SparseArrays", "Static"]
 git-tree-sha1 = "ce17bad65d0842b34a15fffc8879a9f68f08a67f"
@@ -124,7 +118,7 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[FEM]]
 deps = ["LinearAlgebra", "SparseArrays", "Statistics"]
-path = "FEM"
+path = "../FEM"
 uuid = "d39663a0-8cb0-4e90-882a-3a042f1efaa0"
 version = "0.1.0"
 
@@ -133,9 +127,6 @@ deps = ["Pkg", "Requires", "UUIDs"]
 git-tree-sha1 = "b4fdad5fe06e0226348301b5163925ac1ae8b64b"
 uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 version = "1.6.5"
-
-[[FileWatching]]
-uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
 [[FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays"]
@@ -172,12 +163,6 @@ deps = ["Artifacts", "JLLWrappers", "LibCURL_jll", "Libdl", "OpenSSL_jll", "Pkg"
 git-tree-sha1 = "fd83fa0bde42e01952757f01149dd968c06c4dba"
 uuid = "0234f1f7-429e-5d53-9886-15a909be8d59"
 version = "1.12.0+1"
-
-[[IJulia]]
-deps = ["Base64", "Conda", "Dates", "InteractiveUtils", "JSON", "Libdl", "Markdown", "MbedTLS", "Pkg", "Printf", "REPL", "Random", "SoftGlobalScope", "Test", "UUIDs", "ZMQ"]
-git-tree-sha1 = "d8b9c31196e1dd92181cd0f5760ca2d2ffb4ac0f"
-uuid = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
-version = "1.23.2"
 
 [[IfElse]]
 git-tree-sha1 = "28e837ff3e7a6c3cdb252ce49fb412c8eb3caeef"
@@ -258,12 +243,6 @@ version = "0.5.6"
 deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
-[[MbedTLS]]
-deps = ["Dates", "MbedTLS_jll", "Random", "Sockets"]
-git-tree-sha1 = "1c38e51c3d08ef2278062ebceade0e46cefc96fe"
-uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
-version = "1.0.3"
-
 [[MbedTLS_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "0eef589dd1c26a3ac9d753fe1a8bcad63f956fa6"
@@ -327,7 +306,7 @@ version = "1.1.0"
 
 [[PhotonOperator]]
 deps = ["SparseArrays"]
-path = "PhotonOperator"
+path = "../PhotonOperator"
 uuid = "38d0abb5-866d-4e24-b705-4146883ba33a"
 version = "0.1.0"
 
@@ -342,7 +321,7 @@ uuid = "85a6dd25-e78a-55b7-8502-1745935b8125"
 version = "0.2.4"
 
 [[Potential]]
-path = "Potential"
+path = "../Potential"
 uuid = "5d9c1d1b-d707-44ee-860f-8443d6913d0d"
 version = "0.1.0"
 
@@ -393,12 +372,6 @@ uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
 
 [[Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
-
-[[SoftGlobalScope]]
-deps = ["REPL"]
-git-tree-sha1 = "986ec2b6162ccb95de5892ed17832f95badf770c"
-uuid = "b85f4697-e234-5449-a836-ec8e2f98b302"
-version = "1.1.0"
 
 [[SortingAlgorithms]]
 deps = ["DataStructures", "Random", "Test"]
@@ -459,18 +432,6 @@ git-tree-sha1 = "80229be1f670524750d905f8fc8148e5a8c4537f"
 uuid = "81def892-9a0e-5fdd-b105-ffc91e053289"
 version = "1.2.0"
 
-[[ZMQ]]
-deps = ["FileWatching", "Sockets", "ZeroMQ_jll"]
-git-tree-sha1 = "fc68e8a3719166950a0f3e390a14c7302c48f8de"
-uuid = "c2297ded-f4af-51ae-bb23-16f91089e4e1"
-version = "1.2.1"
-
-[[ZeroMQ_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "libsodium_jll"]
-git-tree-sha1 = "74a74a3896b63980734cc876da8a103454559fe8"
-uuid = "8f1865be-045e-5c20-9c9f-bfbfb0764568"
-version = "4.3.2+6"
-
 [[Zlib_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "320228915c8debb12cb434c59057290f0834dbf6"
@@ -482,12 +443,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "2c1332c54931e83f8f94d310fa447fd743e8d600"
 uuid = "3161d3a3-bdf6-5164-811a-617609db77b4"
 version = "1.4.8+0"
-
-[[libsodium_jll]]
-deps = ["Libdl", "Pkg"]
-git-tree-sha1 = "7127f5f40332ccfa43ee07dcd0c4d81a27d9bb23"
-uuid = "a9144af2-ca23-56d9-984f-0d03f7b5ccf8"
-version = "1.0.18+1"
 
 [[nghttp2_jll]]
 deps = ["Libdl", "Pkg"]

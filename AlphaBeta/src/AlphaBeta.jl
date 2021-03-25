@@ -1,4 +1,4 @@
-module Alphabeta
+module AlphaBeta
 
     export get_alpha_t0_x_by_V0_Veq, get_alpha_by_proj_alphax_to_Qx, proj_vector_from_eigenspace_to_xspace, em_iteration, complete_em_v0
 

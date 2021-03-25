@@ -2,3 +2,17 @@ name = "AlphaBeta"
 uuid = "d77d55e1-23be-40c5-8652-b23c35d89ba5"
 authors = ["yizaochen <yizaochen@gmail.com>"]
 version = "0.1.0"
+
+[deps]
+Dierckx = "39dd38d3-220a-591b-8e3c-4c3a8c710a94"
+FEM = "d39663a0-8cb0-4e90-882a-3a042f1efaa0"
+JLD = "4138dd39-2aa7-5051-a626-17a0bb65d9c8"
+LineSearches = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Optim = "429524aa-4258-5aef-a3af-852621145aeb"
+PhotonOperator = "38d0abb5-866d-4e24-b705-4146883ba33a"
+Potential = "5d9c1d1b-d707-44ee-860f-8443d6913d0d"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
+PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"

@@ -1,9 +1,11 @@
 [deps]
+AlphaBeta = "d77d55e1-23be-40c5-8652-b23c35d89ba5"
 Dierckx = "39dd38d3-220a-591b-8e3c-4c3a8c710a94"
 FEM = "d39663a0-8cb0-4e90-882a-3a042f1efaa0"
 IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
 JLD = "4138dd39-2aa7-5051-a626-17a0bb65d9c8"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+PhotonOperator = "38d0abb5-866d-4e24-b705-4146883ba33a"
 Potential = "5d9c1d1b-d707-44ee-860f-8443d6913d0d"
 PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
