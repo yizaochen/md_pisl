@@ -33,6 +33,14 @@ module Potential
         return prefactor * exp_term
     end
 
+    function gaussian(x::Float64, μ::Float64, σ::Float64)
+        prefactor = (σ * √(2π))^(-1)
+        inner_array = ((x - μ) ./ σ) .^ 2
+        inner_array = -0.5 * inner_array
+        exp_term = exp.(inner_array)
+        return prefactor * exp_term
+    end
+
     """
     harmonic_well(xref, k)
 
