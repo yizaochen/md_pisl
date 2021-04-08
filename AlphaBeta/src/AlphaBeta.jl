@@ -89,22 +89,23 @@ module AlphaBeta
         return p_container, log_likelihood_records
     end
 
-    function complete_em_v0(max_n_iteration::Int64, N::Int64, Nh::Int64, Np::Int64, xratio::Float64, xavg::Float64, Nv::Int64, tau::Int64, y_record::Array{Float64,2}, save_freq::Float64, xref::Array{Float64,2}, e_norm::Float64, w0::Array{Float64,2}, f_out_pcontain::String, f_out_d_record::String, f_out_l_record::String, k_photon::Float64)
+    function complete_em_v0(max_n_iteration::Int64, N::Int64, Nh::Int64, Np::Int64, xratio::Float64, xavg::Float64, Nv::Int64, tau::Int64, y_record::Array{Float64,2}, save_freq::Float64, xref::Array{Float64,2}, e_norm::Float64, w0::Array{Float64,2}, f_out_pcontain::String, f_out_d_record::String, f_out_l_record::String, k_photon::Float64, k_kde::Float64, D_init::Float64)
         # Initialize container
         p_container = zeros(Float64, max_n_iteration+1, N)
         log_likelihood_records = zeros(max_n_iteration+1)
         D_records = zeros(max_n_iteration+1)
         
         # Initialize equilibrium probablity density
-        k_kde = 0.05 # unit: kcal/mol/angstrom^2
+        #k_kde = 0.05 # unit: kcal/mol/angstrom^2
         σ = 1 / sqrt(2 * k_kde)
         p0 = gaussian_kde(xref, y_record, σ, w0)
         p_prev = p0  
         p_container[1, :] = p0 # The first row in container is p0
         
         # Initialize diffusion coefficient
-        a = 50. # unit: Å
-        D = get_D_by_Stokes_Einstein_relation(a)
+        #a = 50. # unit: Å
+        #D = get_D_by_Stokes_Einstein_relation(a)
+        D = D_init
         
         # Setting of iteration
         continue_iter_boolean = true
@@ -138,7 +139,8 @@ module AlphaBeta
                 log_likelihood = -Optim.minimum(opt_D_res)[1]
             end
             
-            if abs(log_likelihood_records[iter_id] - log_likelihood_records[iter_id-1]) < 1e-1
+            abs_log_diff = abs(log_likelihood_records[iter_id] - log_likelihood_records[iter_id-1])
+            if abs_log_diff / abs(log_likelihood_records[iter_id-1])  < 1e-3
                 println("Converged....EM Done.")
                 opt_D_res = optimize_D(Nh, Np, xratio, xavg, p_prev, D, Nv, tau, y_record, save_freq, k_photon)
                 D = Optim.minimizer(opt_D_res)[1]
