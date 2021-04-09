@@ -358,7 +358,7 @@ function forward_backward_v2(Nh::Int64, Np::Int64, xratio::Float64, xavg::Float6
     return peq_new_normalize, log_likelihood
 end
 
-function get_loglikelihood(Nh::Int64, Np::Int64, xratio::Int64, xavg::Int64, peq::Array{Float64,2}, D::Float64, 
+function get_loglikelihood(Nh::Int64, Np::Int64, xratio::Float64, xavg::Float64, peq::Array{Float64,2}, D::Float64, 
     Nv::Int64, tau::Int64, x_record::Array{Float64,2}, dt::Float64, k_photon::Float64)
     e_norm, interpo_xs, xref, w0 = initialize(Nh, Np, xratio, xavg)
     Lambdas, Qx, rho = fem_solve_eigen_by_pref(Nh, Np, xratio, xavg, peq, D, Nv)
