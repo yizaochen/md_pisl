@@ -1,0 +1,40 @@
+* Author: Yi-Tsao Chen
+* 
+
+bomlev -2
+
+set topdir = /home/yizaochen/prm_rtf
+open unit 11 read form name @topdir/top_all36_prot.rtf
+read rtf card unit 11
+close unit 11
+
+open read unit 11 card name @topdir/par_all36_prot.prm
+read param unit 11 flex
+close unit 11
+
+read sequ card
+*
+ 1
+ALAD
+
+generate DIAL setup
+
+print coor
+
+rename RESN ALA sele resname ALAD end
+
+open read unit 12 card name alad.pdb
+read coor pdb unit 12
+close unit 12
+
+rename RESN ALAD sele resname ALA end
+
+open write unit 12 card name alad_after_setup.crd 
+write coor card unit 12
+close unit 12
+
+open write unit 12 card name alad_after_setup.pdb 
+write coor pdb unit 12
+close unit 12
+
+stop

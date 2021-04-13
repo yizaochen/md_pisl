@@ -1,5 +1,5 @@
 module Potential  
-    export harmonic_well, double_well, force_double_well, force_harmonic_well, harmonic_well_k_mean, force_harmonic_well_k_mean, doulbe_well_width_height, force_doulbe_well_width_height, triple_well
+    export harmonic_well, double_well, force_double_well, force_harmonic_well, harmonic_well_k_mean, force_harmonic_well_k_mean, doulbe_well_width_height, force_doulbe_well_width_height, triple_well, symmetry_wall_potential
     
     export get_peq, get_peq_c, get_rhoeq, gaussian
 
@@ -146,6 +146,14 @@ module Potential
         F = k * (xref .- xmean)
         F = -2 * F
         return F
+    end
+
+    function symmetry_wall_potential(left_x::Float64, right_x::Float64, sigma::Float64, scalefactor::Float64, xvalue::Float64)
+        if xvalue < 0.
+            return scalefactor * gaussian(xvalue, left_x, sigma)
+        else
+            return scalefactor * gaussian(xvalue, right_x, sigma)
+        end
     end
 
  end

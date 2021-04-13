@@ -1,0 +1,26 @@
+REMARK  AUTHOR: YI-TSAO CHEN                                                          
+REMARK   DATE:     4/12/21     17: 1:34      CREATED BY USER: yizaochen               
+ATOM      1  CL  ALAD    1      -0.633  -1.359  -0.130  1.00  0.00      DIAL
+ATOM      2  HL1 ALAD    1      -1.738  -1.243  -0.158  1.00  0.00      DIAL
+ATOM      3  HL2 ALAD    1      -0.349  -1.891   0.802  1.00  0.00      DIAL
+ATOM      4  HL3 ALAD    1      -0.310  -1.957  -1.009  1.00  0.00      DIAL
+ATOM      5  CLP ALAD    1      -0.002  -0.018  -0.172  1.00  0.00      DIAL
+ATOM      6  OL  ALAD    1      -0.638   0.970  -0.511  1.00  0.00      DIAL
+ATOM      7  NL  ALAD    1       1.285   0.043   0.177  1.00  0.00      DIAL
+ATOM      8  HL  ALAD    1       1.801  -0.775   0.415  1.00  0.00      DIAL
+ATOM      9  CA  ALAD    1       2.034   1.275   0.206  1.00  0.00      DIAL
+ATOM     10  HA  ALAD    1       1.799   1.846  -0.682  1.00  0.00      DIAL
+ATOM     11  CB  ALAD    1       1.726   2.100   1.476  1.00  0.00      DIAL
+ATOM     12  HB1 ALAD    1       1.972   1.521   2.391  1.00  0.00      DIAL
+ATOM     13  HB2 ALAD    1       0.641   2.343   1.504  1.00  0.00      DIAL
+ATOM     14  HB3 ALAD    1       2.292   3.055   1.488  1.00  0.00      DIAL
+ATOM     15  CRP ALAD    1       3.508   0.919   0.146  1.00  0.00      DIAL
+ATOM     16  OR  ALAD    1       3.878  -0.243   0.304  1.00  0.00      DIAL
+ATOM     17  NR  ALAD    1       4.384   1.911  -0.111  1.00  0.00      DIAL
+ATOM     18  HR  ALAD    1       4.064   2.843  -0.250  1.00  0.00      DIAL
+ATOM     19  CR  ALAD    1       5.807   1.671  -0.179  1.00  0.00      DIAL
+ATOM     20  HR1 ALAD    1       6.059   1.066  -1.079  1.00  0.00      DIAL
+ATOM     21  HR2 ALAD    1       6.160   1.117   0.722  1.00  0.00      DIAL
+ATOM     22  HR3 ALAD    1       6.365   2.632  -0.234  1.00  0.00      DIAL
+TER      23      ALAD     1
+END
