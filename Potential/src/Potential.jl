@@ -41,12 +41,14 @@ module Potential
         return prefactor * exp_term
     end
 
-    """
-    harmonic_well(xref, k)
+    function symmetry_wall_potential(left_x::Float64, right_x::Float64, sigma::Float64, scalefactor::Float64, xvalue::Float64)
+        if xvalue < 0.
+            return scalefactor * gaussian(xvalue, left_x, sigma)
+        else
+            return scalefactor * gaussian(xvalue, right_x, sigma)
+        end
+    end
 
-    V = k * (x-1)^2
-    k decide the stiffness of the harmonic potential
-    """
     function harmonic_well(xref, k)
         V = k * (xref .- 1) .^ 2
         return V
@@ -57,32 +59,18 @@ module Potential
         return V
     end
 
-    """
-    double_well(xref)
-
-    Calculate the double-well potential from Figure2 of JPCL2014
-    """
-    function double_well(xref)
-        V = (17302.265 .* (xref .- 1) .^ 4) .- (611.347 .* (xref .- 1) .^ 2) .+ 5.3992
+    function double_well(xref, xmean)
+        inner_term = xref .- xmean
+        V = (17302.265 .* inner_term .^ 4) .- (611.347 .* inner_term .^ 2) .+ 5.3992
         return V
     end
 
-    function triple_well(xref)
-        factor1 = 1. / 15.47
-        inner_term = 13.9 * (xref .- 1)
-        V = factor1 * ((inner_term .^ 6) .- (15 * (inner_term .^ 4)) .+ (53 * (inner_term .^ 2)) .+ (2 * inner_term) .- 15.)
-        V = V .+ 2.9266
-        return V
-    end
-
-    """
-    doulbe_well_width_height
-    
-    xref: domain of x
-    W: width
-    H: height(depth)
-    """
     function doulbe_well_width_height(xref, W, H, xmean, d)
+        """
+        xref: domain of x
+        W: width
+        H: height(depth)
+        """
         H = -H  # Depth is negative
         
         # Calculate c, W_factor and h by given W and H
@@ -94,6 +82,32 @@ module Potential
         s = 1 # scale factor
         V = s .* (((-1/4) * h^4 .* (xref .- xmean).^2 + (1/2) * c^2 .* ( xref .- xmean).^4) .+ d)
         return V
+    end
+
+    function triple_well(xref, xmean)
+        factor1 = 1. / 15.47
+        inner_term = 13.9 * (xref .- xmean)
+        V = factor1 * ((inner_term .^ 6) .- (15 * (inner_term .^ 4)) .+ (53 * (inner_term .^ 2)) .+ (2 * inner_term) .- 15.)
+        V = V .+ 2.9266
+        return V
+    end
+
+    function force_harmonic_well(x, k)
+        F = 2 * k * (x - 1)
+        F = -F
+        return F
+    end
+
+    function force_harmonic_well_k_mean(xref, k, xmean)
+        F = k * (xref .- xmean)
+        F = -2 * F
+        return F
+    end
+
+    function force_double_well(x, xmean)
+        F = (69209.06 * (x - xmean)^3) - (1222.694 * (x - xmean))
+        F = -F
+        return F
     end
 
     function force_doulbe_well_width_height(xref::Array{Float64,2}, W, H, xmean)
@@ -122,38 +136,6 @@ module Potential
         s = 1. # scale factor
         F = s * ((1/2) * h^4 * (xref - xmean) - 2 * c^2 * (xref - xmean)^3)
         return F        
-    end
-
-    """
-    force_double_well(x)
-
-    Calculate the negative first derivative of the double-well potential from Figure2 of JPCL2014 
-    """
-    function force_double_well(x)
-        F = (69209.06 * (x - 1)^3) - (1222.694 * (x - 1))
-        F = -F
-        return F
-    end
-
-
-    function force_harmonic_well(x, k)
-        F = 2 * k * (x - 1)
-        F = -F
-        return F
-    end
-
-    function force_harmonic_well_k_mean(xref, k, xmean)
-        F = k * (xref .- xmean)
-        F = -2 * F
-        return F
-    end
-
-    function symmetry_wall_potential(left_x::Float64, right_x::Float64, sigma::Float64, scalefactor::Float64, xvalue::Float64)
-        if xvalue < 0.
-            return scalefactor * gaussian(xvalue, left_x, sigma)
-        else
-            return scalefactor * gaussian(xvalue, right_x, sigma)
-        end
     end
 
  end
