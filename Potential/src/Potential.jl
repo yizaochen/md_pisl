@@ -1,7 +1,15 @@
 module Potential  
     export harmonic_well, double_well, force_double_well, force_harmonic_well, harmonic_well_k_mean, force_harmonic_well_k_mean, doulbe_well_width_height, force_doulbe_well_width_height, triple_well, symmetry_wall_potential
     
-    export get_peq, get_peq_c, get_rhoeq, gaussian
+    export get_peq, get_peq_c, get_rhoeq, gaussian, get_sigma_by_k, get_k_by_sigma
+
+    function get_sigma_by_k(k)
+        return 1 / sqrt(2 * k)
+    end
+
+    function get_k_by_sigma(sigma)
+        return ((1. / sigma)^2) / 2.
+    end
 
     function get_peq(V)
         p_eq = exp.(-V);
