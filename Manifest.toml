@@ -1,5 +1,10 @@
 # This file is machine-generated - editing it directly is not advised
 
+[[Affine]]
+path = "Affine"
+uuid = "90f17d98-da78-4cd9-b627-66d19442a457"
+version = "0.1.0"
+
 [[AlphaBeta]]
 deps = ["Dierckx", "FEM", "JLD", "LineSearches", "LinearAlgebra", "Optim", "PhotonOperator", "Potential", "Printf", "PyCall", "PyPlot", "SparseArrays"]
 path = "AlphaBeta"

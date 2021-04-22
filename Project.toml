@@ -1,4 +1,5 @@
 [deps]
+Affine = "90f17d98-da78-4cd9-b627-66d19442a457"
 AlphaBeta = "d77d55e1-23be-40c5-8652-b23c35d89ba5"
 Dierckx = "39dd38d3-220a-591b-8e3c-4c3a8c710a94"
 FEM = "d39663a0-8cb0-4e90-882a-3a042f1efaa0"

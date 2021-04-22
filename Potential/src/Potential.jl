@@ -57,6 +57,14 @@ module Potential
         end
     end
 
+    function symmetry_wall_potential(left_x::Float64, right_x::Float64, sigma::Float64, scalefactor::Float64, xvalue::Float64, center_value::Float64)
+        if xvalue < center_value
+            return scalefactor * gaussian(xvalue, left_x, sigma)
+        else
+            return scalefactor * gaussian(xvalue, right_x, sigma)
+        end
+    end
+
     function harmonic_well(xref, k)
         V = k * (xref .- 1) .^ 2
         return V
