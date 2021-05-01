@@ -1,0 +1,4 @@
+name = "Diffusity"
+uuid = "fca15081-c8d4-4aca-bcfd-1103cbe75c6b"
+authors = ["yizaochen <yizaochen@gmail.com>"]
+version = "0.1.0"

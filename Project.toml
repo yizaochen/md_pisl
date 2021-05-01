@@ -2,6 +2,7 @@
 Affine = "90f17d98-da78-4cd9-b627-66d19442a457"
 AlphaBeta = "d77d55e1-23be-40c5-8652-b23c35d89ba5"
 Dierckx = "39dd38d3-220a-591b-8e3c-4c3a8c710a94"
+Diffusity = "fca15081-c8d4-4aca-bcfd-1103cbe75c6b"
 FEM = "d39663a0-8cb0-4e90-882a-3a042f1efaa0"
 IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
 JLD = "4138dd39-2aa7-5051-a626-17a0bb65d9c8"
