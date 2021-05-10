@@ -2,3 +2,7 @@ name = "Diffusity"
 uuid = "fca15081-c8d4-4aca-bcfd-1103cbe75c6b"
 authors = ["yizaochen <yizaochen@gmail.com>"]
 version = "0.1.0"
+
+[deps]
+Dierckx = "39dd38d3-220a-591b-8e3c-4c3a8c710a94"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"

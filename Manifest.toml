@@ -124,6 +124,7 @@ uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
 version = "1.0.2"
 
 [[Diffusity]]
+deps = ["Dierckx", "LinearAlgebra"]
 path = "Diffusity"
 uuid = "fca15081-c8d4-4aca-bcfd-1103cbe75c6b"
 version = "0.1.0"
