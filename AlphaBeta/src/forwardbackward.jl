@@ -34,16 +34,17 @@ end
 
 function get_alpha_hat_e_delta_t(Lambdas::Array{Float64,1}, delta_t::Float64, alpha_hat::Array{Float64,2})
     expLQDT = exp.(-Lambdas .* delta_t)
-    alpha_hat_e_delta_t = expLQDT .* alpha_hat
-    #sum_c2_c72_square = sum(alpha_hat_e_delta_t[2:end].^2)
-    #alpha_hat_e_delta_t[1] = sqrt(1 - sum_c2_c72_square)
-    return alpha_hat_e_delta_t
+    return expLQDT .* alpha_hat
 end
 
 function get_alpha_hat_e_delta_t_v1(expLQDT::Array{Float64,1}, alpha_hat::Array{Float64,2})
+    return expLQDT .* alpha_hat
+end
+
+function get_alpha_hat_e_delta_t_v2(expLQDT::Array{Float64,1}, alpha_hat::Array{Float64,2})
     alpha_hat_e_delta_t = expLQDT .* alpha_hat
-    #sum_c2_c72_square = sum(alpha_hat_e_delta_t[2:end].^2)
-    #alpha_hat_e_delta_t[1] = sqrt(1 - sum_c2_c72_square)
+    sum_c2_c72_square = sum(alpha_hat_e_delta_t[2:end].^2)
+    alpha_hat_e_delta_t[1] = sign(alpha_hat[1]) * sqrt(1 - sum_c2_c72_square)
     return alpha_hat_e_delta_t
 end
 
@@ -147,8 +148,7 @@ function forward_v2(alpha_mat::Array{Float64,2}, atemp::Array{Float64,2}, tau::I
         photon_mat = get_photon_matrix_gaussian(y, xref, e_norm, interpo_xs, Np, w0, k_photon)
 
         # < alpha | exp(-H dt)
-        prev_ahat_edt = get_alpha_hat_e_delta_t_v1(expLQDT, atemp) 
-        #prev_ahat_edt = expLQDT .* atemp
+        prev_ahat_edt = get_alpha_hat_e_delta_t_v1(expLQDT, atemp)
 
         # < alpha | exp(-H dt) y
         psi_photon_psi = Qx' * photon_mat * Qx
@@ -157,6 +157,73 @@ function forward_v2(alpha_mat::Array{Float64,2}, atemp::Array{Float64,2}, tau::I
         # Normalization
         Anorm_vec[alpha_idx+1] = norm(alpha_new)
         atemp = alpha_new / Anorm_vec[alpha_idx+1]
+
+        alpha_mat[:, alpha_idx+1] = atemp
+    end
+    return alpha_mat, Anorm_vec, atemp
+end
+
+function forward_v21(alpha_mat::Array{Float64,2}, atemp::Array{Float64,2}, tau::Int64, x_record::Array{Float64,2}, 
+    LQ::Array{Float64,1}, Qx::Array{Float64,2}, dt::Float64, xref::Array{Float64,2}, e_norm::Float64, 
+    interpo_xs::Array{Float64,1}, Np::Int64,  w0::Array{Float64,2}, Anorm_vec::Array{Float64,2}, k_photon::Float64)
+    #k_photon = 5000 # unit: kcal/mol/angstrom^2
+    expLQDT = exp.(-LQ .* dt)
+    alpha_mat[:, 1] = atemp
+    for alpha_idx in 1:tau
+        y = x_record[alpha_idx+1]
+        photon_mat = get_photon_matrix_gaussian(y, xref, e_norm, interpo_xs, Np, w0, k_photon)
+
+        # < alpha | exp(-H dt)
+        prev_ahat_edt = get_alpha_hat_e_delta_t_v2(expLQDT, atemp)
+
+        # < alpha | exp(-H dt) y
+        psi_photon_psi = Qx' * photon_mat * Qx
+        alpha_new =  psi_photon_psi * prev_ahat_edt
+
+        # Normalization
+        Anorm_vec[alpha_idx+1] = norm(alpha_new)
+        atemp = alpha_new / Anorm_vec[alpha_idx+1]
+
+        alpha_mat[:, alpha_idx+1] = atemp
+    end
+    return alpha_mat, Anorm_vec, atemp
+end
+
+function forward_v3(alpha_mat::Array{Float64,2}, atemp::Array{Float64,2}, tau::Int64, x_record::Array{Float64,2}, 
+    LQ::Array{Float64,1}, Qx::Array{Float64,2}, dt::Float64, xref::Array{Float64,2}, e_norm::Float64, 
+    interpo_xs::Array{Float64,1}, Np::Int64, w0::Array{Float64,2}, Anorm_vec::Array{Float64,2}, k_photon::Float64)
+    # Extract rho_eq from Qx
+    N = length(Qx[:,1])
+    Nv = length(LQ)
+    rho_eq = zeros(N,1)
+    rho_eq[:,1] = abs.(Qx[:,1])
+
+    weight_Qx = get_weight_Qx(N, Nv, w0, Qx)
+
+    expLQDT = exp.(-LQ .* dt)
+    alpha_mat[:, 1] = atemp
+    for alpha_idx in 1:tau
+        y = x_record[alpha_idx+1]
+        photon_mat = get_photon_matrix_gaussian(y, xref, e_norm, interpo_xs, Np, w0, k_photon)
+
+        # < alpha | exp(-H dt)
+        prev_ahat_edt = get_alpha_hat_e_delta_t_v1(expLQDT, atemp) 
+        #prev_ahat_edt = expLQDT .* atemp
+
+        # < alpha | exp(-H dt) y
+        psi_photon_psi = Qx' * photon_mat * Qx
+        alpha_new =  psi_photon_psi * prev_ahat_edt
+
+        alpha_new_x = Qx * alpha_new # Project back to x-space
+        #alpha_new_x = sqrt.(alpha_new_x.^2)
+        p_alpha_new = alpha_new_x .* rho_eq # Back to probability space
+        p_alpha_new = max.(p_alpha_new, 1e-10)
+
+        # Normalization
+        Anorm_vec[alpha_idx+1] = sum(w0 .* p_alpha_new)
+        p_alpha_new_hat = p_alpha_new / Anorm_vec[alpha_idx+1]
+        alpha_new_hat_x = p_alpha_new_hat ./ rho_eq
+        atemp = transpose(weight_Qx) * alpha_new_hat_x
 
         alpha_mat[:, alpha_idx+1] = atemp
     end
@@ -358,7 +425,7 @@ function forward_backward_v2(Nh::Int64, Np::Int64, xratio::Float64, xavg::Float6
     return peq_new_normalize, log_likelihood
 end
 
-function get_loglikelihood(Nh::Int64, Np::Int64, xratio::Float64, xavg::Float64, peq::Array{Float64,2}, D::Float64, 
+function get_loglikelihood_v0(Nh::Int64, Np::Int64, xratio::Float64, xavg::Float64, peq::Array{Float64,2}, D::Float64, 
     Nv::Int64, tau::Int64, x_record::Array{Float64,2}, dt::Float64, k_photon::Float64)
     e_norm, interpo_xs, xref, w0 = initialize(Nh, Np, xratio, xavg)
     Lambdas, Qx, rho = fem_solve_eigen_by_pref(Nh, Np, xratio, xavg, peq, D, Nv)
@@ -377,7 +444,50 @@ function get_loglikelihood(Nh::Int64, Np::Int64, xratio::Float64, xavg::Float64,
 
     alpha_mat, Anorm_vec, atemp = forward_v2(alpha_mat, atemp, tau, x_record, Lambdas, Qx, dt, xref, e_norm, interpo_xs, Np, w0, Anorm_vec, k_photon)
     Anorm_vec[tau+2] = sum(btemp .* atemp)
-    atemp = atemp ./ Anorm_vec[end]
+    return sum(log.(Anorm_vec[2:tau+1])) # Eq. (41)
+end
+
+function get_loglikelihood_v01(Nh::Int64, Np::Int64, xratio::Float64, xavg::Float64, peq::Array{Float64,2}, D::Float64, 
+    Nv::Int64, tau::Int64, x_record::Array{Float64,2}, dt::Float64, k_photon::Float64)
+    e_norm, interpo_xs, xref, w0 = initialize(Nh, Np, xratio, xavg)
+    Lambdas, Qx, rho = fem_solve_eigen_by_pref(Nh, Np, xratio, xavg, peq, D, Nv)
+    N  = Nh*Np - Nh + 1 # Total number of nodes
+    weight_Qx = get_weight_Qx(N, Nv, w0, Qx)
+
+    alpha_mat, beta_mat, Anorm_vec = get_mat_vec_v0(Nv, tau)
+
+    alpha_t0 = get_alpha_t0(weight_Qx, rho)
+    #beta_t_tau = get_beta_t_tau(w0, rho, Qx, Nv)
+    beta_t_tau = get_beta_T(Nv, weight_Qx);
+    atemp = alpha_t0
+    btemp = beta_t_tau
+
+    Anorm_vec[1] = norm(alpha_t0)
+
+    alpha_mat, Anorm_vec, atemp = forward_v21(alpha_mat, atemp, tau, x_record, Lambdas, Qx, dt, xref, e_norm, interpo_xs, Np, w0, Anorm_vec, k_photon)
+    Anorm_vec[tau+2] = sum(btemp .* atemp)
+    return sum(log.(Anorm_vec[2:tau+1])) # Eq. (41)
+end
+
+function get_loglikelihood_v1(Nh::Int64, Np::Int64, xratio::Float64, xavg::Float64, peq::Array{Float64,2}, D::Float64, 
+    Nv::Int64, tau::Int64, x_record::Array{Float64,2}, dt::Float64, k_photon::Float64)
+    e_norm, interpo_xs, xref, w0 = initialize(Nh, Np, xratio, xavg)
+    Lambdas, Qx, rho = fem_solve_eigen_by_pref(Nh, Np, xratio, xavg, peq, D, Nv)
+    N  = Nh*Np - Nh + 1 # Total number of nodes
+    weight_Qx = get_weight_Qx(N, Nv, w0, Qx)
+
+    alpha_mat, beta_mat, Anorm_vec = get_mat_vec_v0(Nv, tau)
+
+    alpha_t0 = get_alpha_t0(weight_Qx, rho)
+    #beta_t_tau = get_beta_t_tau(w0, rho, Qx, Nv)
+    beta_t_tau = get_beta_T(Nv, weight_Qx);
+    atemp = alpha_t0
+    btemp = beta_t_tau
+
+    Anorm_vec[1] = norm(alpha_t0)
+
+    alpha_mat, Anorm_vec, atemp = forward_v3(alpha_mat, atemp, tau, x_record, Lambdas, Qx, dt, xref, e_norm, interpo_xs, Np, w0, Anorm_vec, k_photon)
+    Anorm_vec[tau+2] = sum(btemp .* atemp)
     return sum(log.(Anorm_vec[2:tau+1])) # Eq. (41)
 end
 
