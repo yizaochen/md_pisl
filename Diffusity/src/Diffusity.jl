@@ -1,5 +1,5 @@
 module Diffusity
-using LinearAlgebra, Dierckx
+using LinearAlgebra, Dierckx, PhotonOperator
 
 function sigmoid(x_center::Real, x::Real, scale_factor::Real, translation_factor::Real)
     z = x - x_center
@@ -174,6 +174,37 @@ function get_l_derivative_taylor_v1(D::Real, lambda0_array::Array{Float64,1}, de
     py = sum(get_fjD(D, lambda0_array, deltat, j, Nv, alpha_t0, psi_photon_psi)^2 for j=1:Nv)
     py_derivative = get_py_derivative_taylor_v1(D, lambda0_array, deltat, Nv, alpha_t0, psi_photon_psi)
     return py_derivative / py 
+end
+
+function update_D(Np::Int64, Δt::Real, Nv::Int64, alpha_t0::Array{Float64,2}, D_old::Real, lambda0_array::Array{Float64,1}, Qx::Array{Float64,2}, xref::Array{Float64,2}, e_norm::Float64, interpo_xs::Array{Float64,1}, w0::Array{Float64,2},y_record::Array{Float64,2}, k_delta::Real)
+    upper_term = 0.
+    bottom_term = 0.
+
+    g_array = zeros(Np)
+    aj_mat = zeros((Np, Nv))
+    bj_mat = zeros((Np, Nv))
+    cj_mat = zeros((Np, Nv))
+
+    alpha = zeros(Nv, 1)
+    alpha[:,1] = alpha_t0
+    
+    for τ = 1:Np
+        y = y_record[τ+1]
+        photon_mat = get_photon_matrix_gaussian(y, xref, e_norm, interpo_xs, Np, w0, k_delta)
+        psi_photon_psi = Qx' * photon_mat * Qx
+
+        g_array[τ] = sum(get_fjD(D_old, lambda0_array, Δt, j, Nv, alpha, psi_photon_psi)^2 for j=1:Nv)
+        aj_mat[τ,:] = [get_aj(j, Nv, lambda0_array, alpha, psi_photon_psi) for j=1:Nv]
+        bj_mat[τ,:] = [get_bj(j, Nv, alpha, psi_photon_psi) for j=1:Nv]
+        cj_mat[τ,:] = [get_cj(j, Nv, lambda0_array, alpha, psi_photon_psi) for j=1:Nv]
+
+        expLQDT = exp.(-(D_old * lambda0_array) .* save_freq)
+        alpha_e_delta_t = expLQDT .* alpha
+        alpha_next =  psi_photon_psi * alpha_e_delta_t
+        alpha[:,1] = alpha_next / norm(alpha_next)
+    end
+    D = upper_term / (Δt * bottom_term)
+    return D
 end
 
 
