@@ -1,5 +1,8 @@
 module Diffusity
+using Base: Float64
 using LinearAlgebra, Dierckx, PhotonOperator
+
+include("forwardbackward_D.jl")
 
 function sigmoid(x_center::Real, x::Real, scale_factor::Real, translation_factor::Real)
     z = x - x_center
