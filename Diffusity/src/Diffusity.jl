@@ -1,6 +1,6 @@
 module Diffusity
 using Base: Float64
-using LinearAlgebra, Dierckx, PhotonOperator
+using LinearAlgebra, Dierckx, PhotonOperator, Printf
 
 include("forwardbackward_D.jl")
 
