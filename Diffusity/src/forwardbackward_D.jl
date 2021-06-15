@@ -221,6 +221,7 @@ end
 
 function EM_D_by_transition_matrix(n_iter::Int64, Nv::Int64, number_photon::Int64, w0::Array{Float64,2}, p_eq::Array{Float64,2}, N::Int64, Qx_prime::Array{Float64,2}, y_record::Array{Float64,2}, xref::Array{Float64,2}, e_norm::Float64, interpo_xs::Array{Float64,1}, Np::Int64, k_delta::Real, D_guess::Array{Float64,1}, eigenvalues_prime::Array{Float64,1}, save_freq::Float64)
     D_em_mat = zeros(n_iter, Nv)
+    log_l_mat = zeros(n_iter)
     for iter_id=1:n_iter
         println(@sprintf "Start EM-Step: %d" iter_id)
         alpha_mat, beta_mat, Anorm_vec, r_sqrt_array = forward_backward_v0(Nv, number_photon, w0, p_eq, N, Qx_prime, y_record, xref, e_norm, interpo_xs, Np, k_delta, D_guess, eigenvalues_prime, save_freq)
@@ -232,6 +233,8 @@ function EM_D_by_transition_matrix(n_iter::Int64, Nv::Int64, number_photon::Int6
 
         D_em_mat[iter_id,:] = D_em_array
         D_guess[:] = D_em_array
+
+        log_l_mat[iter_id] = sum(log.(Anorm_vec))
     end
-    return D_em_mat
+    return D_em_mat, log_l_mat
 end
