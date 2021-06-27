@@ -1,9 +1,9 @@
 module AlphaBeta
 
-    export get_alpha_t0_x_by_V0_Veq, get_alpha_by_proj_alphax_to_Qx, proj_vector_from_eigenspace_to_xspace, em_iteration, complete_em_v0, complete_em_only_update_peq, complete_em_only_update_peq_no_converge_test, complete_em_only_update_peq_given_p0
+    export get_alpha_t0_x_by_V0_Veq, get_alpha_by_proj_alphax_to_Qx, proj_vector_from_eigenspace_to_xspace, em_iteration, complete_em_v0, complete_em_only_update_peq, complete_em_only_update_peq_no_converge_test, complete_em_only_update_peq_given_p0, complete_em_only_update_peq_no_converge_test_v1
 
     include("forwardbackward.jl")
-    export get_weight_Qx, get_alpha_t0, get_alpha_t0_x_square_norm, get_beta_T, get_alpha_hat_e_delta_t, get_e_delta_t_y_beta,get_beta_t_tau, get_alpha_t0_x_square_norm, forward_backward_v2, get_normalized_beta, get_posterior, optimize_D, get_mat_vec_v0, get_LQ_diff_ij
+    export get_weight_Qx, get_alpha_t0, get_alpha_t0_x_square_norm, get_beta_T, get_alpha_hat_e_delta_t, get_e_delta_t_y_beta,get_beta_t_tau, get_alpha_t0_x_square_norm, forward_backward_v2, forward_backward_v3, get_normalized_beta, get_posterior, optimize_D, get_mat_vec_v0, get_LQ_diff_ij
 
     export get_loglikelihood_v0, get_loglikelihood_v01, get_loglikelihood_v1
     
@@ -329,9 +329,6 @@ module AlphaBeta
         D_records = zeros(max_n_iteration+1)
         
         # Initialize equilibrium probablity density
-        #k_kde = 0.05 # unit: kcal/mol/angstrom^2
-        σ = 1 / sqrt(2 * k_kde)
-        p0 = gaussian_kde(xref, y_record, σ, w0)
         p_prev = p0  
         p_container[1, :] = p0 # The first row in container is p0
         
@@ -385,6 +382,60 @@ module AlphaBeta
         println(@sprintf "Write log_likelihood_records to %s" f_out_l_record)
 
         return p_container, D_records, log_likelihood_records
+    end
+
+    function complete_em_only_update_peq_no_converge_test_v1(max_n_iteration::Int64, N::Int64, Nh::Int64, Np::Int64, xratio::Float64, xavg::Float64, Nv::Int64, tau::Int64, y_record::Array{Float64,2}, save_freq::Float64, xref::Array{Float64,2}, e_norm::Float64, w0::Array{Float64,2}, f_out_pcontain::String, f_out_l_record::String, k_photon::Float64, p0::Array{Float64,2}, D_init::Float64)
+        # Initialize container
+        p_container = zeros(Float64, max_n_iteration+1, N)
+        log_likelihood_records = zeros(max_n_iteration+1)
+        
+        # Initialize equilibrium probablity density
+        p_prev = p0  
+        p_container[1, :] = p0 # The first row in container is p0
+        
+        # Initialize diffusion coefficient
+        D_guess = D_init * ones(Nv)
+        
+        # Setting of iteration
+        continue_iter_boolean = true
+        iter_id = 1    
+        while continue_iter_boolean
+            println(@sprintf "Iteration-ID: %d" iter_id)
+            # Every 5 iterations, check abrupt change and do smooth
+            if iter_id % 5 == 0
+                abrupt_boolean, idx_larger_than_1 = detect_abrupt(xref[:,1], p_prev[:,1], N, e_norm)
+                p_prev[:,1] = smooth_peq(N, p_prev[:,1], abrupt_boolean, w0, xref)
+            end
+            
+            p_em, log_likelihood = forward_backward_v3(Nh, Np, xratio, xavg, p_prev, D_guess, Nv, tau, y_record, save_freq, k_photon)
+            p_em = max.(p_em, 1e-10)   
+            p_prev[:,1] = p_em
+
+            # Record peq, D, log_likelihood
+            p_container[iter_id+1, :] = p_em
+            log_likelihood_records[iter_id] = log_likelihood
+
+            if iter_id == 1
+                iter_id += 1     
+                continue
+            end
+        
+            iter_id += 1
+            if iter_id > max_n_iteration
+                println("The number of iteration exceeds the setting maximum number!")
+                continue_iter_boolean = false
+                log_likelihood_records[iter_id] = log_likelihood   
+            end
+        end
+
+        # Output
+        save(f_out_pcontain, "p_container", p_container)
+        println(@sprintf "Write p_container to %s" f_out_pcontain)
+    
+        save(f_out_l_record, "log_likelihood_records", log_likelihood_records)
+        println(@sprintf "Write log_likelihood_records to %s" f_out_l_record)
+
+        return p_container, log_likelihood_records
     end
 
 end

@@ -3,7 +3,7 @@ module PhotonOperator
     using Base: Int64
 using SparseArrays
 
-    export find_nearest_point, get_photon_matrix_delta, get_photon_matrix_gaussian, get_gaussian, get_p_y_given_x_mat, get_photon_matrix_gaussian_v1
+    export find_nearest_point, get_photon_matrix_delta, get_photon_matrix_gaussian, get_gaussian, get_p_y_given_x_mat, get_photon_matrix_gaussian_v1, get_big_photon_mat
     
     function find_nearest_point(x::Real, xref::Array{Float64,2}, e_norm::Float64, interpo_xs::Array{Float64,1}, Np::Int64)
         x_left = xref[1] # The most left point
@@ -86,6 +86,28 @@ using SparseArrays
             p_y_given_x_mat[row_idx,:] = p_y_given_x ./ sum(w0 .* p_y_given_x)
         end
         return p_y_given_x_mat
+    end
+
+    function get_weighted_p_y_given_x_mat(N::Int64, k_delta::Real, xref::Array{Float64,2}, w0::Array{Float64,2})
+        p_y_given_x_mat = get_p_y_given_x_mat(N, k_delta, xref, w0)
+        weighted_p_y_given_x_mat = zeros(N,N)
+        for col_idx=1:N
+            weighted_p_y_given_x_mat[:,col_idx] = w0 .* p_y_given_x_mat[:,col_idx]
+        end
+        return weighted_p_y_given_x_mat
+    end
+
+    function get_big_photon_mat(N::Int64, Nv::Int64, w0::Array{Float64,2}, k_delta::Real, xref::Array{Float64,2}, Qx::Array{Float64,2})
+        weighted_p_y_given_x_mat = get_weighted_p_y_given_x_mat(N, k_delta, xref, w0)
+        big_photon_mat = zeros(Nv,Nv,N)
+        w0_emission_mat_Qx = zeros(Nv,N)
+        for idx=1:N
+            for eigv_idx=1:Nv
+                w0_emission_mat_Qx[eigv_idx,:] = weighted_p_y_given_x_mat[:,idx] .* Qx[:,eigv_idx]
+            end
+            big_photon_mat[:,:,idx] = w0_emission_mat_Qx * Qx
+        end
+        return big_photon_mat
     end
 
 end

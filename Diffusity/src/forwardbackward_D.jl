@@ -52,10 +52,11 @@ function forward_backward_v1(Nv::Int64, number_photon::Int64, w0::Array{Float64,
     weight_Qx = get_weight_Qx(N, Nv, w0, Qx_prime)
     rho_s1 = get_rho_s1(w0, p_eq, weight_Qx)
     expLQDT = exp.(-(D_guess .* eigenvalues_prime) .* save_freq)
-    p_y_given_x_mat = get_p_y_given_x_mat(N, k_delta, xref, w0)
+    big_photon_mat = get_big_photon_mat(N, Nv, w0, k_delta, xref, Qx_prime)
+    idx_array = [find_nearest_point(y_record[time_idx], xref, e_norm, interpo_xs, Np) for time_idx=1:number_photon]
 
-    alpha_mat, Anorm_vec = forward_v1(Nv, number_photon, rho_s1, y_record, xref, e_norm, interpo_xs, Np, w0, Qx_prime, alpha_mat, Anorm_vec, expLQDT, p_y_given_x_mat)
-    beta_mat = backward_v1(Nv, number_photon, y_record, xref, e_norm, interpo_xs, Np, w0, Qx_prime, beta_mat, Anorm_vec, expLQDT, p_y_given_x_mat)
+    alpha_mat, Anorm_vec = forward_v1(Nv, number_photon, rho_s1, alpha_mat, Anorm_vec, expLQDT, big_photon_mat, idx_array)
+    beta_mat = backward_v1(Nv, number_photon, beta_mat, Anorm_vec, expLQDT, big_photon_mat, idx_array)
     return alpha_mat, beta_mat, Anorm_vec
 end
 
@@ -81,13 +82,13 @@ function forward_v0(Nv::Int64, number_photon::Int64, rho_s1::Array{Float64,2}, y
     return alpha_mat, Anorm_vec
 end
 
-function forward_v1(Nv::Int64, number_photon::Int64, rho_s1::Array{Float64,2}, y_record::Array{Float64,2}, xref::Array{Float64,2}, e_norm::Float64, interpo_xs::Array{Float64,1}, Np::Int64, w0::Array{Float64,2}, Qx_prime::Array{Float64,2}, alpha_mat::Array{Float64,2}, Anorm_vec::Array{Float64,2}, expLQDT::Array{Float64,1}, p_y_given_x_mat::Array{Float64,2})
+function forward_v1(Nv::Int64, number_photon::Int64, rho_s1::Array{Float64,2}, alpha_mat::Array{Float64,2}, Anorm_vec::Array{Float64,2}, expLQDT::Array{Float64,1}, big_photon_mat::Array{Float64,3}, idx_array::Array{Int64,1})
     alpha_hat_prev = zeros(1,Nv)
     alpha_hat_prev[1,:] = rho_s1
     expLQDT = transpose(expLQDT)
 
     for time_idx = 1:number_photon 
-        psi_photon_psi = get_photon_matrix_gaussian_v1(Nv, w0, p_y_given_x_mat, Qx_prime, y_record[time_idx], xref, e_norm, interpo_xs, Np)
+        psi_photon_psi = big_photon_mat[:,:,idx_array[time_idx]]
     
         alpha_bra = alpha_hat_prev * psi_photon_psi    
         Anorm_vec[time_idx] = alpha_bra[1]
@@ -128,13 +129,13 @@ function backward_v0(Nv::Int64, number_photon::Int64, beta_N_bra::Array{Float64,
     return beta_mat, r_sqrt_array
 end
 
-function backward_v1(Nv::Int64, number_photon::Int64, y_record::Array{Float64,2}, xref::Array{Float64,2}, e_norm::Float64, interpo_xs::Array{Float64,1}, Np::Int64, w0::Array{Float64,2}, Qx_prime::Array{Float64,2}, beta_mat::Array{Float64,2}, Anorm_vec::Array{Float64,2}, expLQDT::Array{Float64,1}, p_y_given_x_mat::Array{Float64,2})
+function backward_v1(Nv::Int64, number_photon::Int64, beta_mat::Array{Float64,2}, Anorm_vec::Array{Float64,2}, expLQDT::Array{Float64,1}, big_photon_mat::Array{Float64,3}, idx_array::Array{Int64,1})
     beta_hat_next = zeros(Nv,1)
     beta_hat_next[1,1] = 1
 
     for time_idx = number_photon:-1:1
         beta_mat[:,time_idx] = beta_hat_next[:,1]
-        psi_photon_psi = get_photon_matrix_gaussian_v1(Nv, w0, p_y_given_x_mat, Qx_prime, y_record[time_idx], xref, e_norm, interpo_xs, Np)
+        psi_photon_psi = big_photon_mat[:,:,idx_array[time_idx]]
 
         # Photon operation
         y_beta_hat_next = psi_photon_psi * beta_hat_next
