@@ -3,9 +3,9 @@ module AlphaBeta
     export get_alpha_t0_x_by_V0_Veq, get_alpha_by_proj_alphax_to_Qx, proj_vector_from_eigenspace_to_xspace, em_iteration, complete_em_v0, complete_em_only_update_peq, complete_em_only_update_peq_no_converge_test, complete_em_only_update_peq_given_p0, complete_em_only_update_peq_no_converge_test_v1
 
     include("forwardbackward.jl")
-    export get_weight_Qx, get_alpha_t0, get_alpha_t0_x_square_norm, get_beta_T, get_alpha_hat_e_delta_t, get_e_delta_t_y_beta,get_beta_t_tau, get_alpha_t0_x_square_norm, forward_backward_v2, forward_backward_v3, get_normalized_beta, get_posterior, optimize_D, get_mat_vec_v0, get_LQ_diff_ij
+    export get_weight_Qx, get_alpha_t0, get_alpha_t0_x_square_norm, get_beta_T, get_alpha_hat_e_delta_t, get_e_delta_t_y_beta,get_beta_t_tau, get_alpha_t0_x_square_norm, forward_backward_v2, forward_backward_v3, forward_backward_v2_test, get_normalized_beta, get_posterior, optimize_D, get_mat_vec_v0, get_LQ_diff_ij
 
-    export get_loglikelihood_v0, get_loglikelihood_v01, get_loglikelihood_v1
+    export get_loglikelihood_v0, get_loglikelihood_v1
     
     export gaussian, gaussian_kde, get_D_by_Stokes_Einstein_relation # from initialization.jl
 
