@@ -14,6 +14,12 @@ function initialize_mat_vec_v1(Nv::Int64, number_photon::Int64)
     return alpha_mat, beta_mat, Anorm_vec
 end
 
+function initialize_mat_vec_onlyalpha_v1(Nv::Int64, number_photon::Int64)
+    alpha_mat = zeros(Nv,number_photon)
+    Anorm_vec = ones(1,number_photon) # sqrt(c_array)
+    return alpha_mat, Anorm_vec
+end
+
 function get_rho_s1(w0::Array{Float64,2}, p_eq::Array{Float64,2}, weight_Qx::Array{Float64,2})
     p_x1 = p_eq / sum(w0 .* p_eq)
     return transpose(weight_Qx) * (sqrt.(p_x1))
@@ -58,6 +64,38 @@ function forward_backward_v1(Nv::Int64, number_photon::Int64, w0::Array{Float64,
     alpha_mat, Anorm_vec = forward_v1(Nv, number_photon, rho_s1, alpha_mat, Anorm_vec, expLQDT, big_photon_mat, idx_array)
     beta_mat = backward_v1(Nv, number_photon, beta_mat, Anorm_vec, expLQDT, big_photon_mat, idx_array)
     return alpha_mat, beta_mat, Anorm_vec
+end
+
+function scan_l_by_vary_D(Nv::Int64, number_photon::Int64, w0::Array{Float64,2}, p_eq::Array{Float64,2}, N::Int64, Qx_prime::Array{Float64,2}, y_record::Array{Float64,2}, xref::Array{Float64,2}, e_norm::Float64, interpo_xs::Array{Float64,1}, Np::Int64, k_delta::Real, D_array::Array{Float64,1}, eigenvalues_prime::Array{Float64,1}, save_freq::Float64)
+    weight_Qx = get_weight_Qx(N, Nv, w0, Qx_prime)
+    rho_s1 = get_rho_s1(w0, p_eq, weight_Qx)
+    big_photon_mat = get_big_photon_mat(N, Nv, w0, k_delta, xref, Qx_prime)
+    idx_array = [find_nearest_point(y_record[time_idx], xref, e_norm, interpo_xs, Np) for time_idx=1:number_photon]
+    l_array = zeros(length(D_array))
+    idx = 1
+    for D_value in D_array
+        D_guess = D_value * ones(Nv)
+        expLQDT = exp.(-(D_guess .* eigenvalues_prime) .* save_freq)
+        alpha_mat, Anorm_vec = initialize_mat_vec_onlyalpha_v1(Nv, number_photon)
+        alpha_mat, Anorm_vec = forward_v1(Nv, number_photon, rho_s1, alpha_mat, Anorm_vec, expLQDT, big_photon_mat, idx_array)
+        l_array[idx] = sum(log.(Anorm_vec))
+        idx += 1
+    end
+    return l_array
+end
+
+function calculate_Q(Nv::Int64, number_photon::Int64, w0::Array{Float64,2}, p_eq::Array{Float64,2}, N::Int64, Qx_prime::Array{Float64,2}, y_record::Array{Float64,2}, xref::Array{Float64,2}, e_norm::Float64, interpo_xs::Array{Float64,1}, Np::Int64, k_delta::Real, D_value::Real, eigenvalues_prime::Array{Float64,1}, save_freq::Float64)
+    D_guess = D_value * ones(Nv)
+    alpha_mat, beta_mat, Anorm_vec = initialize_mat_vec_v1(Nv, number_photon)
+    weight_Qx = get_weight_Qx(N, Nv, w0, Qx_prime)
+    rho_s1 = get_rho_s1(w0, p_eq, weight_Qx)
+    expLQDT = exp.(-(D_guess .* eigenvalues_prime) .* save_freq)
+    big_photon_mat = get_big_photon_mat(N, Nv, w0, k_delta, xref, Qx_prime)
+    idx_array = [find_nearest_point(y_record[time_idx], xref, e_norm, interpo_xs, Np) for time_idx=1:number_photon]
+
+    alpha_mat, Anorm_vec = forward_v1(Nv, number_photon, rho_s1, alpha_mat, Anorm_vec, expLQDT, big_photon_mat, idx_array)
+    beta_mat = backward_v1(Nv, number_photon, beta_mat, Anorm_vec, expLQDT, big_photon_mat, idx_array)
+    return alpha_mat, beta_mat
 end
 
 function forward_v0(Nv::Int64, number_photon::Int64, rho_s1::Array{Float64,2}, y_record::Array{Float64,2}, xref::Array{Float64,2}, e_norm::Float64, interpo_xs::Array{Float64,1}, Np::Int64, w0::Array{Float64,2}, k_delta::Real, Qx_prime::Array{Float64,2}, alpha_mat::Array{Float64,2}, Anorm_vec::Array{Float64,2}, expLQDT::Array{Float64,1})

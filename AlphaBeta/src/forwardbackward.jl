@@ -560,16 +560,3 @@ function backward_with_betamatrix(LQ::Array{Float64,1}, dt::Float64, Nv::Int64, 
     end
     return exp_ab_mat, beta_mat
 end
-
-function get_Q(LQ::Array{Float64,1}, dt::Float64, alpha_mat::Array{Float64,2}, beta_mat::Array{Float64,2}, tau::Int64)
-    container = zeros(1, tau)
-    expLQDT = exp.(-LQ .* dt)
-    for alpha_idx in 1:tau
-        atemp = alpha_mat[:, alpha_idx]
-        btemp = beta_mat[:, alpha_idx+1]
-        prev_ahat_edt = expLQDT .* atemp
-        container[alpha_idx] = dot(prev_ahat_edt, btemp)
-    end
-    #return sum(container) / likelihood
-    return sum(container)
-end
