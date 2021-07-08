@@ -84,7 +84,25 @@ function scan_l_by_vary_D(Nv::Int64, number_photon::Int64, w0::Array{Float64,2},
     return l_array
 end
 
-function calculate_Q(Nv::Int64, number_photon::Int64, w0::Array{Float64,2}, p_eq::Array{Float64,2}, N::Int64, Qx_prime::Array{Float64,2}, y_record::Array{Float64,2}, xref::Array{Float64,2}, e_norm::Float64, interpo_xs::Array{Float64,1}, Np::Int64, k_delta::Real, D_value::Real, eigenvalues_prime::Array{Float64,1}, save_freq::Float64)
+function scan_Q_by_vary_D(Nv::Int64, number_photon::Int64, w0::Array{Float64,2}, p_eq::Array{Float64,2}, N::Int64, Qx_prime::Array{Float64,2}, y_record::Array{Float64,2}, xref::Array{Float64,2}, e_norm::Float64, interpo_xs::Array{Float64,1}, Np::Int64, k_delta::Real, D_array::Array{Float64,1}, eigenvalues_prime::Array{Float64,1}, save_freq::Float64)
+    weight_Qx = get_weight_Qx(N, Nv, w0, Qx_prime)
+    rho_s1 = get_rho_s1(w0, p_eq, weight_Qx)
+    big_photon_mat = get_big_photon_mat(N, Nv, w0, k_delta, xref, Qx_prime)
+    idx_array = [find_nearest_point(y_record[time_idx], xref, e_norm, interpo_xs, Np) for time_idx=1:number_photon]
+    l_array = zeros(length(D_array))
+    idx = 1
+    for D_value in D_array
+        D_guess = D_value * ones(Nv)
+        expLQDT = exp.(-(D_guess .* eigenvalues_prime) .* save_freq)
+        alpha_mat, Anorm_vec = initialize_mat_vec_onlyalpha_v1(Nv, number_photon)
+        alpha_mat, Anorm_vec = forward_v1(Nv, number_photon, rho_s1, alpha_mat, Anorm_vec, expLQDT, big_photon_mat, idx_array)
+        l_array[idx] = sum(Anorm_vec)
+        idx += 1
+    end
+    return l_array
+end
+
+function get_alpha_beta_Anorm(Nv::Int64, number_photon::Int64, w0::Array{Float64,2}, p_eq::Array{Float64,2}, N::Int64, Qx_prime::Array{Float64,2}, y_record::Array{Float64,2}, xref::Array{Float64,2}, e_norm::Float64, interpo_xs::Array{Float64,1}, Np::Int64, k_delta::Real, D_value::Real, eigenvalues_prime::Array{Float64,1}, save_freq::Float64)
     D_guess = D_value * ones(Nv)
     alpha_mat, beta_mat, Anorm_vec = initialize_mat_vec_v1(Nv, number_photon)
     weight_Qx = get_weight_Qx(N, Nv, w0, Qx_prime)
@@ -95,7 +113,48 @@ function calculate_Q(Nv::Int64, number_photon::Int64, w0::Array{Float64,2}, p_eq
 
     alpha_mat, Anorm_vec = forward_v1(Nv, number_photon, rho_s1, alpha_mat, Anorm_vec, expLQDT, big_photon_mat, idx_array)
     beta_mat = backward_v1(Nv, number_photon, beta_mat, Anorm_vec, expLQDT, big_photon_mat, idx_array)
-    return alpha_mat, beta_mat
+    return alpha_mat, beta_mat, Anorm_vec
+end
+
+function get_alpha_beta_mat(Nv::Int64, number_photon::Int64, w0::Array{Float64,2}, p_eq::Array{Float64,2}, N::Int64, Qx_prime::Array{Float64,2}, D_value::Real, eigenvalues_prime::Array{Float64,1}, save_freq::Float64, big_photon_mat::Array{Float64,3}, idx_array::Array{Int64,1})
+    D_guess = D_value * ones(Nv)
+    alpha_mat, y_beta_mat, Anorm_vec = initialize_mat_vec_v1(Nv, number_photon)
+    weight_Qx = get_weight_Qx(N, Nv, w0, Qx_prime)
+    rho_s1 = get_rho_s1(w0, p_eq, weight_Qx)
+    expLQDT = exp.(-(D_guess .* eigenvalues_prime) .* save_freq)
+
+    alpha_mat, Anorm_vec = forward_v1(Nv, number_photon, rho_s1, alpha_mat, Anorm_vec, expLQDT, big_photon_mat, idx_array)
+    y_beta_mat = get_y_beta_by_backward_v1(Nv, number_photon, y_beta_mat, Anorm_vec, expLQDT, big_photon_mat, idx_array)
+    return alpha_mat, y_beta_mat
+end
+
+function get_Qt(Nv::Int64, number_photon::Int64, D_new::Real, alpha_mat::Array{Float64,2}, y_beta_mat::Array{Float64,2}, λ_array::Array{Float64,1}, Δt::Float64)
+    Qt_mat = zeros(Nv, number_photon)
+    expLQDT = exp.(-(D_new .* λ_array) .* Δt)
+
+    # ⟨𝛼0|e{-HΔt}y1|𝛽̂1⟩
+    alpha_t0 = zeros(Nv)
+    alpha_t0[1] = 1
+    Qt_mat[:,1] = alpha_t0 .* y_beta_mat[:, 1]
+
+    for time_idx=2:number_photon
+        Qt_mat[:,time_idx] = (expLQDT .* alpha_mat[:,time_idx-1]) .* y_beta_mat[:, time_idx]
+    end
+    return [sum(Qt_mat[eigv,:]) for eigv=1:Nv]
+end
+
+function calculate_decomp_Q_vary_D(Nv::Int64, number_photon::Int64, w0::Array{Float64,2}, p_eq::Array{Float64,2}, N::Int64, Qx_prime::Array{Float64,2}, y_record::Array{Float64,2}, xref::Array{Float64,2}, e_norm::Float64, interpo_xs::Array{Float64,1}, Np::Int64, k_delta::Real, D_array::Array{Float64,1}, λ_array::Array{Float64,1}, Δt::Float64)
+    big_photon_mat = get_big_photon_mat(N, Nv, w0, k_delta, xref, Qx_prime)
+    idx_array = [find_nearest_point(y_record[time_idx], xref, e_norm, interpo_xs, Np) for time_idx=1:number_photon]
+
+    Q_decomp_mat = zeros(Nv, length(D_array))
+    D_idx = 1
+    for D_new in D_array
+        alpha_mat, y_beta_mat = get_alpha_beta_mat(Nv, number_photon, w0, p_eq, N, Qx_prime, D_new, λ_array, Δt, big_photon_mat, idx_array)
+        Q_decomp_mat[:,D_idx] = get_Qt(Nv, number_photon, D_new, alpha_mat, y_beta_mat, λ_array, Δt)
+        D_idx += 1
+    end
+    return Q_decomp_mat
 end
 
 function forward_v0(Nv::Int64, number_photon::Int64, rho_s1::Array{Float64,2}, y_record::Array{Float64,2}, xref::Array{Float64,2}, e_norm::Float64, interpo_xs::Array{Float64,1}, Np::Int64, w0::Array{Float64,2}, k_delta::Real, Qx_prime::Array{Float64,2}, alpha_mat::Array{Float64,2}, Anorm_vec::Array{Float64,2}, expLQDT::Array{Float64,1})
@@ -185,6 +244,23 @@ function backward_v1(Nv::Int64, number_photon::Int64, beta_mat::Array{Float64,2}
         beta_hat_next = edt_y_beta_hat_next ./ Anorm_vec[time_idx]
     end
     return beta_mat
+end
+
+function get_y_beta_by_backward_v1(Nv::Int64, number_photon::Int64, y_beta_mat::Array{Float64,2}, Anorm_vec::Array{Float64,2}, expLQDT::Array{Float64,1}, big_photon_mat::Array{Float64,3}, idx_array::Array{Int64,1})
+    beta_hat_next = zeros(Nv,1)
+    beta_hat_next[1,1] = 1
+
+    for time_idx = number_photon:-1:1
+        psi_photon_psi = big_photon_mat[:,:,idx_array[time_idx]]
+
+        # Photon operation and Normalization
+        y_beta_hat_next = psi_photon_psi * beta_hat_next
+        y_beta_mat[:, time_idx] = y_beta_hat_next
+
+        # Time propagation
+        beta_hat_next = (expLQDT .* y_beta_hat_next) ./ Anorm_vec[time_idx]
+    end
+    return y_beta_mat
 end
 
 function get_gamma(N::Int64, Nv::Int64, w0::Array{Float64,2}, alpha_mat::Array{Float64,2}, beta_mat::Array{Float64,2}, time_idx::Int64, Qx_prime::Array{Float64,2})
