@@ -143,6 +143,55 @@ function get_Qt(Nv::Int64, number_photon::Int64, D_new::Real, alpha_mat::Array{F
     return [sum(Qt_mat[eigv,:]) for eigv=1:Nv]
 end
 
+function get_l_by_decompose(Nv::Int64, number_photon::Int64, D_new::Real, alpha_mat::Array{Float64,2}, y_beta_mat::Array{Float64,2}, λ_array::Array{Float64,1}, Δt::Float64)
+    ct_mat = zeros(number_photon)
+    expLQDT = exp.(-(D_new .* λ_array) .* Δt)
+
+    # ⟨𝛼0|e{-HΔt}y1|𝛽̂1⟩
+    alpha_t0 = zeros(Nv)
+    alpha_t0[1] = 1
+    ct_mat[1] = dot(alpha_t0, y_beta_mat[:, 1])
+
+    for time_idx=2:number_photon
+        ct_mat[time_idx] = dot(expLQDT .* alpha_mat[:,time_idx-1], y_beta_mat[:, time_idx])
+    end
+    return sum(log.(ct_mat))
+end
+
+function get_l_derivative_by_decompose(Nv::Int64, number_photon::Int64, D_new::Real, alpha_mat::Array{Float64,2}, y_beta_mat::Array{Float64,2}, λ_array::Array{Float64,1}, Δt::Float64)
+    l_derivative_mat = zeros(number_photon)
+    expLQDT = exp.(-(D_new .* λ_array) .* Δt)
+    LQDTexpLQDT = -(λ_array .* Δt) .* expLQDT
+
+    # ⟨𝛼0|e{-HΔt}y1|𝛽̂1⟩
+    alpha_t0 = zeros(Nv)
+    alpha_t0[1] = 1
+    numerator = dot(LQDTexpLQDT .* alpha_t0, y_beta_mat[:, 1])
+    denominator = dot(expLQDT .* alpha_t0, y_beta_mat[:, 1])
+    l_derivative_mat[1] = numerator / denominator
+
+    for time_idx=2:number_photon
+        numerator = dot(LQDTexpLQDT .* alpha_mat[:,time_idx-1], y_beta_mat[:, time_idx])
+        denominator = dot(expLQDT .* alpha_mat[:,time_idx-1], y_beta_mat[:, time_idx])
+        l_derivative_mat[time_idx] = numerator / denominator
+    end
+    return sum(l_derivative_mat)
+end
+
+function calculate_l_by_decomp_vary_D(Nv::Int64, number_photon::Int64, w0::Array{Float64,2}, p_eq::Array{Float64,2}, N::Int64, Qx_prime::Array{Float64,2}, y_record::Array{Float64,2}, xref::Array{Float64,2}, e_norm::Float64, interpo_xs::Array{Float64,1}, Np::Int64, k_delta::Real, D_old::Real, D_array::Array{Float64,1}, λ_array::Array{Float64,1}, Δt::Float64)
+    big_photon_mat = get_big_photon_mat(N, Nv, w0, k_delta, xref, Qx_prime)
+    idx_array = [find_nearest_point(y_record[time_idx], xref, e_norm, interpo_xs, Np) for time_idx=1:number_photon]
+    alpha_mat, y_beta_mat = get_alpha_beta_mat(Nv, number_photon, w0, p_eq, N, Qx_prime, D_old, λ_array, Δt, big_photon_mat, idx_array)
+    return [get_l_by_decompose(Nv, number_photon, D_new, alpha_mat, y_beta_mat, λ_array, Δt) for D_new in D_array]
+end
+
+function calculate_l_derivative_by_decomp_vary_D(Nv::Int64, number_photon::Int64, w0::Array{Float64,2}, p_eq::Array{Float64,2}, N::Int64, Qx_prime::Array{Float64,2}, y_record::Array{Float64,2}, xref::Array{Float64,2}, e_norm::Float64, interpo_xs::Array{Float64,1}, Np::Int64, k_delta::Real, D_old::Real, D_array::Array{Float64,1}, λ_array::Array{Float64,1}, Δt::Float64)
+    big_photon_mat = get_big_photon_mat(N, Nv, w0, k_delta, xref, Qx_prime)
+    idx_array = [find_nearest_point(y_record[time_idx], xref, e_norm, interpo_xs, Np) for time_idx=1:number_photon]
+    alpha_mat, y_beta_mat = get_alpha_beta_mat(Nv, number_photon, w0, p_eq, N, Qx_prime, D_old, λ_array, Δt, big_photon_mat, idx_array)
+    return [get_l_derivative_by_decompose(Nv, number_photon, D_new, alpha_mat, y_beta_mat, λ_array, Δt) for D_new in D_array]
+end
+
 function calculate_decomp_Q_vary_D(Nv::Int64, number_photon::Int64, w0::Array{Float64,2}, p_eq::Array{Float64,2}, N::Int64, Qx_prime::Array{Float64,2}, y_record::Array{Float64,2}, xref::Array{Float64,2}, e_norm::Float64, interpo_xs::Array{Float64,1}, Np::Int64, k_delta::Real, D_array::Array{Float64,1}, λ_array::Array{Float64,1}, Δt::Float64)
     big_photon_mat = get_big_photon_mat(N, Nv, w0, k_delta, xref, Qx_prime)
     idx_array = [find_nearest_point(y_record[time_idx], xref, e_norm, interpo_xs, Np) for time_idx=1:number_photon]
