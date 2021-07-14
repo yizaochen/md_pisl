@@ -116,6 +116,18 @@ function get_alpha_beta_Anorm(Nv::Int64, number_photon::Int64, w0::Array{Float64
     return alpha_mat, beta_mat, Anorm_vec
 end
 
+function get_log_likelihood(Nv::Int64, number_photon::Int64, w0::Array{Float64,2}, p_eq::Array{Float64,2}, N::Int64, Qx::Array{Float64,2}, y_record::Array{Float64,2}, xref::Array{Float64,2}, e_norm::Float64, interpo_xs::Array{Float64,1}, Np::Int64, k_delta::Real, lambda_array::Array{Float64,1}, save_freq::Float64)
+    alpha_mat, beta_mat, Anorm_vec = initialize_mat_vec_v1(Nv, number_photon)
+    weight_Qx = get_weight_Qx(N, Nv, w0, Qx)
+    rho_s1 = get_rho_s1(w0, p_eq, weight_Qx)
+    expLQDT = exp.(-lambda_array .* save_freq)
+    big_photon_mat = get_big_photon_mat(N, Nv, w0, k_delta, xref, Qx)
+    idx_array = [find_nearest_point(y_record[time_idx], xref, e_norm, interpo_xs, Np) for time_idx=1:number_photon]
+
+    alpha_mat, Anorm_vec = forward_v1(Nv, number_photon, rho_s1, alpha_mat, Anorm_vec, expLQDT, big_photon_mat, idx_array)
+    return alpha_mat, Anorm_vec
+end
+
 function get_alpha_beta_mat(Nv::Int64, number_photon::Int64, w0::Array{Float64,2}, p_eq::Array{Float64,2}, N::Int64, Qx_prime::Array{Float64,2}, D_value::Real, eigenvalues_prime::Array{Float64,1}, save_freq::Float64, big_photon_mat::Array{Float64,3}, idx_array::Array{Int64,1})
     D_guess = D_value * ones(Nv)
     alpha_mat, y_beta_mat, Anorm_vec = initialize_mat_vec_v1(Nv, number_photon)

@@ -3,19 +3,8 @@ using Base: Float64
 using LinearAlgebra, Dierckx, PhotonOperator, Printf, Roots
 
 include("forwardbackward_D.jl")
+include("eta.jl")
 
-function sigmoid(x_center::Real, x::Real, scale_factor::Real, translation_factor::Real)
-    z = x - x_center
-    return (one(z) / (one(z) + exp(-z))) * scale_factor + translation_factor
-end
-
-function linear(xleft::Real, xright::Real, yleft::Real, yright::Real, x::Real, c::Real)
-    """
-    model: y = mx + c
-    """
-    m = (yright - yleft) / (xright - xleft)
-    return m * x + c
-end
 
 function get_eigv_derivative(xref::Array{Float64,2}, idx_eigv::Int64, Qx::Array{Float64,2}, N::Int64)
     eigv_spl = Spline1D(xref[:,1], Qx[:, idx_eigv])
